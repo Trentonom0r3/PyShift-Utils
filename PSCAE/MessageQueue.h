@@ -8,6 +8,10 @@
 #include <boost/variant/get.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/variant.hpp>
+#include <boost/interprocess/sync/named_mutex.hpp>
+#include <boost/interprocess/sync/named_condition.hpp>
+//posix time
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <iostream>
 #include <thread>
 #include <sstream>
@@ -15,6 +19,7 @@
 #include "rpc.h"
 #include "objbase.h"
 
+// UUID generator
 std::string createUUID();
 
 enum class Commands {
@@ -27,6 +32,7 @@ enum class Commands {
 
 typedef boost::variant<int, float, std::string, bool, std::vector<std::string>> CommandArg;
 typedef std::vector<CommandArg> CommandArgs;
+
 
 struct Command {
     std::string sessionID = "0";
@@ -65,12 +71,6 @@ public:
         return instance;
     }
 
-
-    void clearQueues() {
-        clearQueue("PyC1");
-        clearQueue("PyR1");
-    }
-
     void sendCommand(Command command) {
         std::stringstream ss;
         boost::archive::text_oarchive oa(ss);
@@ -79,37 +79,34 @@ public:
         commandQueue->send(serializedCommand.c_str(), serializedCommand.size(), 0);
     }
 
-    Response receiveResponse() {
-        boost::interprocess::message_queue::size_type recvd_size;
-        unsigned int priority;
-        responseQueue->get_max_msg_size();
-        std::vector<char> buffer(responseQueue->get_max_msg_size());
-        responseQueue->receive(buffer.data(), buffer.size(), recvd_size, priority);
-        std::string serializedResponse(buffer.begin(), buffer.begin() + recvd_size);
-        std::stringstream ss(serializedResponse);
-        boost::archive::text_iarchive ia(ss);
-        Response response;
-        ia >> response;
-        return response;
-    }
+    bool tryReceiveResponse(Response& response) {
+		boost::interprocess::message_queue::size_type recvd_size;
+		unsigned int priority;
+		std::size_t max_msg_size = responseQueue->get_max_msg_size();
+		std::vector<char> buffer(max_msg_size);
+		if (responseQueue->timed_receive(buffer.data(), buffer.size(), recvd_size, priority,
+			boost::posix_time::microsec_clock::universal_time() +
+			boost::posix_time::milliseconds(100))) {
+			std::string serializedResponse(buffer.begin(), buffer.begin() + recvd_size);
+			std::stringstream ss(serializedResponse);
+			boost::archive::text_iarchive ia(ss);
+			ia >> response;
+			return true;
+		}
+		return false;
+	}
+
 
 private:
     MessageQueueManager() {
         // Using smart pointers for automatic resource management
         commandQueue = std::make_unique<boost::interprocess::message_queue>(
-            boost::interprocess::open_or_create, "PyC1", 100, 1024);
+            boost::interprocess::open_or_create, "PyC21", 100, 1024);
         responseQueue = std::make_unique<boost::interprocess::message_queue>(
-            boost::interprocess::open_or_create, "PyR1", 100, 1024);
+            boost::interprocess::open_or_create, "PyR21", 100, 1024);
     }
-    ~MessageQueueManager() {
-        boost::interprocess::message_queue::remove("PyC1");
-        boost::interprocess::message_queue::remove("PyR1");
-    }
+
     std::unique_ptr<boost::interprocess::message_queue> commandQueue;
     std::unique_ptr<boost::interprocess::message_queue> responseQueue;
-    void clearQueue(const char* queueName) {
-        if (boost::interprocess::message_queue::remove(queueName)) {
-            std::cout << "Cleared existing queue: " << queueName << std::endl;
-        }
-    }
+
 };

@@ -3,24 +3,30 @@
 
 Project App::getProject()
 {
-	Command cmd;
-	std::string sessionID = createUUID(); // Generate a new session ID for the Project
-	cmd.sessionID = sessionID;
-	cmd.name = "getProject";
-	cmd.args.push_back(sessionID);
+	try {
+		Command cmd;
+		std::string sessionID = createUUID(); // Generate a new session ID for the Project
+		cmd.sessionID = sessionID;
+		cmd.name = "getProject";
+		cmd.args.push_back(sessionID);
 
 		auto& mqm = MessageQueueManager::getInstance();
-	mqm.sendCommand(cmd);
+		mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
-	std::string ID = resp.sessionID;
-	if (ID != sessionID) {
-		//this command wasn't for us, ignore until we get the right one
-		resp = mqm.receiveResponse();
+		Response resp;
+		while (!mqm.tryReceiveResponse(resp)) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		}
+		std::string ID = resp.sessionID;
+
+		std::string projectID = boost::get<std::string>(resp.args[0]);
+		Project project(projectID);
+		return project;
 	}
-	std::string projectID = boost::get<std::string>(resp.args[0]);
-	Project project(projectID);
-	return project;
+	catch (std::exception& e) {
+		std::cout << "Exception: " << e.what() << std::endl;
+		throw std::runtime_error("Error getting project + " + std::string(e.what()));
+	}
 }
 
 
@@ -77,7 +83,7 @@ void App::executeCommand(int commandId) {
 }
 
 std::string App::pluginPaths() {
-		auto& mqm = MessageQueueManager::getInstance();
+	auto& mqm = MessageQueueManager::getInstance();
 
 	// Construct a Command
 	Command cmd;
@@ -88,12 +94,12 @@ std::string App::pluginPaths() {
 	mqm.sendCommand(cmd);
 
 	// Receive the Response
-	Response resp = mqm.receiveResponse();
-	std::string ID = resp.sessionID;
-	if (ID != this->sessionID) {
-		//this command wasn't for us, ignore until we get the right one
-		resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
+
+	std::string ID = resp.sessionID;
 
 	// Return the result
 	std::string output = boost::get<std::string>(resp.args[0]);

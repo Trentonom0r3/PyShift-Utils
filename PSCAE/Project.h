@@ -6,7 +6,7 @@
 
 class ProjectCollection {
 public:
-    explicit ProjectCollection(const std::string seessionID) {
+    explicit ProjectCollection(const std::string sessionID) : sessionID(sessionID) {
         items_ = ProjectCollection::getItems();
     }
 

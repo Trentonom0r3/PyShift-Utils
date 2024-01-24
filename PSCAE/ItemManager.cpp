@@ -28,7 +28,10 @@ bool Item::isSelected()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 	bool output = boost::get<bool>(resp.args[0]);
 	return output;
 }
@@ -54,7 +57,10 @@ std::string Item::getName()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 	std::string output = boost::get<std::string>(resp.args[0]);
 	return output;
 }
@@ -75,32 +81,54 @@ void Item::setName(std::string name)
 
 float Item::getWidth()
 {
+	try {
 	Command cmd;
 	cmd.name = "GetItemWidth";
-	cmd.args.push_back(this->sessionID);
 	cmd.sessionID = this->sessionID;
 
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 	float output = boost::get<float>(resp.args[0]);
 	return output;
+} catch (boost::bad_get& e) {
+	std::cout << e.what() << std::endl;
+	throw std::runtime_error("Error in gathering Width:" + std::string(e.what()));
+}
+catch (std::exception& e) {
+	std::cout << e.what() << std::endl;
+	throw std::runtime_error("Error in gathering Width:" + std::string(e.what()));
+}
 }
 
 float Item::getHeight()
 {
+	try {
 	Command cmd;
 	cmd.name = "GetItemHeight";
-	cmd.args.push_back(this->sessionID);
 	cmd.sessionID = this->sessionID;
 
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 	float output = boost::get<float>(resp.args[0]);
 	return output;
+} catch (boost::bad_get& e) {
+	std::cout << e.what() << std::endl;
+	throw std::runtime_error("Error in gathering Height:" + std::string(e.what()));
+}
+catch (std::exception& e) {
+	std::cout << e.what() << std::endl;
+	throw std::runtime_error("Error in gathering Height:" + std::string(e.what()));
+}
 }
 
 float Item::getCurrentTime()
@@ -113,7 +141,10 @@ float Item::getCurrentTime()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 	float output = boost::get<float>(resp.args[0]);
 	return output;
 }
@@ -128,7 +159,10 @@ float Item::getDuration()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 	float output = boost::get<float>(resp.args[0]);
 	return output;
 }
@@ -154,8 +188,10 @@ float CompItem::getFrameRate()
 
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
-
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 	float output = boost::get<float>(resp.args[0]);
 	return output;
 }
@@ -182,7 +218,10 @@ float CompItem::getDuration()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 	float output = boost::get<float>(resp.args[0]);
 	return output;
 }
@@ -204,11 +243,10 @@ void CompItem::setWidth(float width)
 {
 	Command cmd;
 	cmd.name = "SetCompWidth";
-	cmd.args.push_back(this->sessionID);
 	cmd.args.push_back(width);
 	cmd.sessionID = this->sessionID;
 
-		auto& mqm = MessageQueueManager::getInstance();
+	auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 }
 
@@ -216,11 +254,10 @@ void CompItem::setHeight(float height)
 {
 	Command cmd;
 	cmd.name = "SetCompHeight";
-	cmd.args.push_back(this->sessionID);
 	cmd.args.push_back(height);
 	cmd.sessionID = this->sessionID;
 
-		auto& mqm = MessageQueueManager::getInstance();
+	auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 }
 
@@ -243,7 +280,10 @@ std::shared_ptr<Layer> CompItem::newSolid(std::string name, float width, float h
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 	std::string layerHandle = boost::get<std::string>(resp.args[0]);
 	std::shared_ptr<Layer> layer = std::make_shared<Layer>(layerHandle);
 	return layer;
@@ -260,7 +300,10 @@ std::shared_ptr<LayerCollection> CompItem::getSelectedLayers()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 	std::string compHandle = boost::get<std::string>(resp.args[0]);
 	std::shared_ptr<LayerCollection> layerCollection = std::make_shared<LayerCollection>(compHandle);
 	return layerCollection;
@@ -281,8 +324,10 @@ std::shared_ptr<LayerCollection> CompItem::getLayers()
 
 			auto& mqm = MessageQueueManager::getInstance();
 		mqm.sendCommand(cmd);
-
-		Response resp = mqm.receiveResponse();
+		Response resp;
+		while (!mqm.tryReceiveResponse(resp)) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		}
 		std::string outID = boost::get<std::string>(resp.args[0]);
 		std::shared_ptr<LayerCollection> layerCollection = std::make_shared<LayerCollection>(outID);
 		return layerCollection;
@@ -305,7 +350,10 @@ int CompItem::NumLayers()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 	int output = boost::get<int>(resp.args[0]);
 	return output;
 }
@@ -320,7 +368,10 @@ float CompItem::getCurrentTime()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 	float output = boost::get<float>(resp.args[0]);
 	return output;
 }
@@ -361,7 +412,10 @@ Command cmd;
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	std::string output = boost::get<std::string>(resp.args[0]);
 	return output;
@@ -377,7 +431,10 @@ std::string Layer::GetSourceName()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	std::string output = boost::get<std::string>(resp.args[0]);
 	return output;
@@ -406,7 +463,10 @@ int Layer::index()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	int output = boost::get<int>(resp.args[0]);
 	return output;
@@ -434,7 +494,10 @@ std::shared_ptr<FootageItem> Layer::duplicate()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	std::string output = boost::get<std::string>(resp.args[0]);
 	std::shared_ptr<FootageItem> footageItem = std::make_shared<FootageItem>(output);
@@ -450,8 +513,10 @@ float Layer::layerTime()
 
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
-
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	float output = boost::get<float>(resp.args[0]);
 	return output;
@@ -469,7 +534,10 @@ Command cmd;
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	float output = boost::get<float>(resp.args[0]);
 	return output;
@@ -487,7 +555,10 @@ float Layer::inPoint()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	float output = boost::get<float>(resp.args[0]);
 	return output;
@@ -503,7 +574,10 @@ float Layer::compInPoint()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	float output = boost::get<float>(resp.args[0]);
 	return output;
@@ -519,7 +593,10 @@ float Layer::duration()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	float output = boost::get<float>(resp.args[0]);
 	return output;
@@ -535,7 +612,10 @@ float Layer::compDuration()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	float output = boost::get<float>(resp.args[0]);
 	return output;
@@ -552,7 +632,10 @@ std::string Layer::getQuality()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	std::string output = boost::get<std::string>(resp.args[0]);
 	return output;
@@ -593,7 +676,10 @@ float Layer::getOffset()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	float output = boost::get<float>(resp.args[0]);
 	return output;
@@ -635,7 +721,10 @@ bool Layer::getFlag(LayerFlag flag)
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	bool output = boost::get<bool>(resp.args[0]);
 	return output;
@@ -657,10 +746,13 @@ std::shared_ptr<Item> Layer::getSource()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	std::string output = boost::get<std::string>(resp.args[0]);
-	std::shared_ptr<Item> item = std::make_shared<Item>(output);
+	std::shared_ptr<FootageItem> item = std::make_shared<FootageItem>(output); //adjust to return correct item type
 	return item;
 }
 
@@ -680,7 +772,11 @@ std::shared_ptr<ItemCollection> FolderItem::ChildItems()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+	
 	std::string ID = boost::get<std::string>(resp.args[0]);
 	std::shared_ptr<ItemCollection> itemCollection = std::make_shared<ItemCollection>(ID);
 	return itemCollection;
@@ -718,10 +814,13 @@ std::vector<std::shared_ptr<Layer>> LayerCollection::getAllLayers()
 		cmd.name = "GetAllLayers";
 		cmd.sessionID = this->compHandle_;
 
-			auto& mqm = MessageQueueManager::getInstance();
+		auto& mqm = MessageQueueManager::getInstance();
 		mqm.sendCommand(cmd);
 
-		Response resp = mqm.receiveResponse();
+		Response resp;
+		while (!mqm.tryReceiveResponse(resp)) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		}
 
 		std::vector<std::string> layerHandles = boost::get<std::vector<std::string>>(resp.args[0]);
 
@@ -749,7 +848,10 @@ std::string LayerCollection::getCompName()
 
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	std::string output = boost::get<std::string>(resp.args[0]);
 	return output;
@@ -765,7 +867,10 @@ std::shared_ptr<Layer> LayerCollection::addLayerToCollection(Item itemHandle, in
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	std::string output = boost::get<std::string>(resp.args[0]);
 	std::shared_ptr<Layer> layer = std::make_shared<Layer>(output);
@@ -782,7 +887,10 @@ std::vector<std::shared_ptr<Item>> ItemCollection::getItems()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	std::vector<std::string> itemHandles = boost::get<std::vector<std::string>>(resp.args[0]);
 	std::vector<std::string> itemTypes = boost::get<std::vector<std::string>>(resp.args[1]);
@@ -819,7 +927,10 @@ std::string FootageItem::getPath()
 		auto& mqm = MessageQueueManager::getInstance();
 	mqm.sendCommand(cmd);
 
-	Response resp = mqm.receiveResponse();
+	Response resp;
+	while (!mqm.tryReceiveResponse(resp)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	std::string output = boost::get<std::string>(resp.args[0]);
 	return output;
